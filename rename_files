@@ -1,0 +1,33 @@
+#!/usr/bin/python
+"""Garbage Python script to rename a bunch of files"""
+
+import os
+import glob
+
+def get_padding_amount(number):
+    """Get padding amount for formatting number with leading 0"""
+    numstr = str(number)
+    return len(numstr)
+
+cwd = os.getcwd()
+file_ext = input("File extension (without .):\n")
+
+files = glob.glob(f"{cwd}/*.{file_ext}")
+files.sort()
+print("\n".join(files))
+choice = input("Does this look correct?\n")
+if choice.lower() != "y":
+    exit(1)
+
+basename = input("Base filename:\n")
+choice = input(f"Is this correct: {basename}\n")
+if choice.lower() != "y":
+    exit(1)
+
+PADDAMT = get_padding_amount(len(files))
+for i, f in enumerate(files):
+    file = os.path.basename(f)
+    num = str(i + 1).zfill(PADDAMT)
+    new_file = f"{basename.strip()}{num}.{file_ext}"
+    print(f"{file} -> {new_file}")
+    os.rename(file, new_file)
