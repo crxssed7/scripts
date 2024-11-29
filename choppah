@@ -1,0 +1,60 @@
+#!/usr/bin/python
+"""Split TV show episodes in half"""
+
+import glob
+import os
+import re
+from moviepy.video.io.VideoFileClip import VideoFileClip
+
+def split_video(video_path, output_dir, season, episode1, episode2, tv_show, ext):
+    """Splits a video file into two halves and saves them in the output directory."""
+    # Load the video
+    video = VideoFileClip(video_path)
+    duration = video.duration
+    midpoint = duration / 2
+
+    # Create output filenames
+    half1_path = os.path.join(output_dir, f"{tv_show} {season}{episode1}.{ext}")
+    half2_path = os.path.join(output_dir, f"{tv_show} {season}{episode2}.{ext}")
+
+    # Split and save the video
+    video.subclipped(0, midpoint).write_videofile(half1_path, codec="libx264", audio_codec="aac")
+    video.subclipped(midpoint, duration).write_videofile(half2_path, codec="libx264", audio_codec="aac")
+
+    video.close()
+
+def find_and_split_videos(output_dir):
+    """Finds MKV files matching the pattern, extracts season/episode info, and splits them into halves."""
+    # Regular expression to match filenames like S01E01-E02
+    pattern = re.compile(r"(S\d{2})(E\d{2})-(E\d{2})")
+
+    tv_show = input("TV show name: ")
+    ext = input("File extension (without .): ")
+
+    # Ensure output directory exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Scan the current directory for MKV files
+    cwd = os.getcwd()
+    files = glob.glob(f"{cwd}/*.{ext}")
+    files.sort()
+    for file in files:
+        match = pattern.search(file)
+        if match:
+            season, episode1, episode2 = match.groups()
+            print(f"Found matching file: {file} (Season: {season}, Episode1: {episode1}, Episode2: {episode2})")
+            try:
+                split_video(file, output_dir, season, episode1, episode2, tv_show, ext)
+                print(f"Successfully split: {file}")
+            except Exception as e:
+                print(f"Error processing {file}: {e}")
+        else:
+            print(f"Skipping file (no season/episode info): {file}")
+
+if __name__ == "__main__":
+    # Output directory for the split videos
+    output_directory = "output_videos"
+
+    # Process the videos
+    find_and_split_videos(output_directory)
